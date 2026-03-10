@@ -1,127 +1,124 @@
 # Tank Game Development: Modular Unity Architecture
 
-This repository contains the core scripts and architectural guidelines for developing a top-down tank shooter in Unity 6, focusing on **Clean Architecture**, **Interface-driven design**, and **Modular components**.
+This documentation outlines the core scripts and architectural guidelines for a top-down tank shooter in Unity 6, focusing on **Clean Architecture** and **Interface-driven design**.
 
 ---
 
-## ## Core Architectural Principles
+## Core Architectural Principles
 
-### ### Interface Contracts
+### Interface Contracts
 
-Instead of tight coupling, this project uses interfaces to define behavior. This allows systems like the `Bullet` to interact with any object that has health without needing to know specifically what that object is.
+Interfaces define behavior contracts without enforcing a specific implementation, making systems like bullets highly flexible. Bullets only need to know that a target implements `IHealth` to interact with it.
 
 | Interface | Method(s) | Purpose |
 | --- | --- | --- |
-| `IMovable` | `Move(Vector2 direction)` | Defines how an entity translates and rotates.
+| **`IMovable`** | `Move(Vector2 direction)` | Defines translation and rotation logic.
 
  |
-| `IHealth` | `TakeDamage(int amount)`, `Heal(int amount)` | Manages damage processing and recovery.
+| **`IHealth`** | `TakeDamage(int amount)`, `Heal(int amount)` | Manages health changes for any object.
 
  |
-| `IShooter` | `Shoot()` | Handles projectile instantiation logic.
+| **`IShooter`** | `Shoot()` | Handles projectile instantiation.
 
  |
-| `IEnemy` | `Attack()` | Defines basic enemy offensive behavior.
+| **`IEnemy`** | `Attack()` | Defines basic enemy offensive behavior.
 
  |
 
-### ### Why Modularity Matters
+### Why Modularity Matters
 
-By separating logic into specific scripts (`Move`, `Health`, `Shooting`), we achieve:
+Structuring logic into separate scripts (Move, Shoot, Health) provides several benefits:
 
 * 
-**Reusability:** Apply the same health or movement logic to players and enemies alike.
-
-
-* 
-**Maintainability:** Each script has one job (Single Responsibility Principle), making debugging easier.
+**Single Responsibility:** Each script does exactly one job.
 
 
 * 
-**Interchangeability:** Swap out a player's visual sprite without breaking the underlying movement logic.
+**Reusability:** Interfaces let you apply the same logic to players, enemies, or turrets.
+
+
+* 
+**Maintenance:** Components are interchangeable and maintained separately.
 
 
 
 ---
 
-## ## Implementation Details
+## Implementation Details
 
-### ### 1. Movement System
+### 1. Movement System
 
-Both Player and Enemy implement `IMovable`. The Player uses input axes, while the Enemy calculates a direction based on a target Transform.
-
-**Player Movement Logic:**
+The player script uses `Input.GetAxis` to drive the `Move` method, handling both forward position and Z-axis rotation.
 
 ```csharp
 public void Move(Vector2 direction) {
+    // Moves the tank forward/backward based on Y input
     Vector3 move = transform.up * direction.y * moveSpeed * Time.deltaTime;
-    transform.position += move;
+    [cite_start]transform.position += move; [cite: 72]
+    
+    // Rotates the tank based on X input
     float rotation = -direction.x * rotationSpeed * Time.deltaTime;
-    transform.Rotate(0, 0, rotation);
+    [cite_start]transform.Rotate(0, 0, rotation); [cite: 73]
 }
 
 ```
 
+### 2. Bullet Logic & the `out` Keyword
 
-
-### ### 2. Health & Damage (The `out` Keyword)
-
-The `Bullet` script utilizes the C# `out` keyword with `TryGetComponent` to safely extract and damage a target if it implements `IHealth`.
+The `out` keyword is used to return multiple values or extract components. In the bullet system, `TryGetComponent` uses `out` to safely check for the `IHealth` interface before applying damage.
 
 ```csharp
 void OnTriggerEnter2D(Collider2D collision) {
-    if (collision.TryGetComponent(out IHealth target)) {
-        target.TakeDamage(10);
-        Destroy(gameObject);
+    // Safely attempts to find the IHealth interface on the target
+    [cite_start]if (collision.TryGetComponent(out IHealth target)) { [cite: 35]
+        [cite_start]target.TakeDamage(10); [cite: 37]
+        [cite_start]Destroy(gameObject); [cite: 38]
     }
 }
 
 ```
 
-
-
 ---
 
-## ## Setup Instructions
+## Setup Instructions
 
-### ### Player/Enemy Configuration
+### Player & Enemy Configuration
 
 1. 
-**Logic Hub:** Create an Empty GameObject (e.g., "Player").
+**Logic Hub:** Create an **Empty GameObject** named "Player" or "Enemy".
 
 
-2. **Visuals:** Create a child GameObject for the Sprite. This keeps the logic detached from the art.
+2. 
+**Visuals:** Create a child 2D Sprite object (e.g., "PlayerVisuals") to keep logic and art separate.
 
 
-3. **Muzzle:** Create an empty child object positioned at the barrel tip. This serves as the `firePoint`.
+3. 
+**Muzzle:** Create an empty child object at the barrel tip to serve as the `firePoint`. Ensure it is outside the tank's hitbox to prevent self-destruction.
 
 
-4. **Physics:** * Add a `Rigidbody2D` and set **Gravity Scale to 0** to prevent the tank from falling.
+4. 
+**Physics:** * Add a **Rigidbody2D** and set **Gravity Scale to 0** so the tank doesn't fall.
 
 
-* Add a `BoxCollider2D`. For bullets, ensure **Is Trigger** is checked.
-
-
-
-
-
-### ### Essential Components Checklist
-
-* [ ] `PlayerMove` / `EnemyMove` 
-
-
-* [ ] `PlayerShooting` / `EnemyShooting` 
-
-
-* [ ] `PlayerHealth` / `EnemyHealth` 
-
-
-* [ ] Reference Assignment: Ensure all prefabs (Bullets) and Transforms (Muzzle/Target) are assigned in the Inspector to avoid `NullReferenceException`.
+* Add a **BoxCollider2D**. For bullets, ensure **Is Trigger** is checked.
 
 
 
----
 
-*Developed as part of SE404: Game Design and Development.* 
 
-Would you like me to generate the full C# code for a specific script mentioned above, such as the `EnemyMove` or `IHealth` interface?
+### Essential Checklist
+
+* 
+**Modular Scripts:** Attach `Move`, `Shooting`, and `Health` scripts to the parent object.
+
+
+* 
+**Reference Targets:** For enemies, assign the **Player Transform** to the `Target` field so they know what to follow.
+
+
+* 
+**Bullet Prefabs:** Assign the Bullet prefab to the `Projectile Prefab` slot in the shooting scripts.
+
+
+* 
+**Safety:** Assign all references in the Inspector to avoid `NullReferenceException`.
