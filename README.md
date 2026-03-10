@@ -96,8 +96,7 @@ void OnTriggerEnter2D(Collider2D collision) {
 3. **Muzzle:** Create an empty child object positioned at the barrel tip. This serves as the `firePoint`.
 
 
-4. 
-**Physics:** * Add a `Rigidbody2D` and set **Gravity Scale to 0** to prevent the tank from falling.
+4. **Physics:** * Add a `Rigidbody2D` and set **Gravity Scale to 0** to prevent the tank from falling.
 
 
 * Add a `BoxCollider2D`. For bullets, ensure **Is Trigger** is checked.
